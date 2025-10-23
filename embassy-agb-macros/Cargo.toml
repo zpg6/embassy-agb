@@ -2,8 +2,11 @@
 name = "embassy-agb-macros"
 version = "0.1.0"
 edition = "2024"
-license = "MPL-2.0"
 description = "Macros for embassy-agb async Game Boy Advance development"
+license = "MIT"
+repository = "https://github.com/zpg6/embassy-agb"
+keywords = ["embedded", "gba", "gameboy", "async", "macros"]
+categories = ["embedded", "no-std"]
 
 [lib]
 proc-macro = true

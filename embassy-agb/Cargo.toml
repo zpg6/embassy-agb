@@ -2,9 +2,10 @@
 name = "embassy-agb"
 version = "0.1.0"
 edition = "2024"
-license = "MPL-2.0"
 description = "Embassy async support for Game Boy Advance development with agb"
-repository = "https://github.com/agbrs/embassy-agb"
+license = "MIT"
+repository = "https://github.com/zpg6/embassy-agb"
+keywords = ["embedded", "gba", "gameboy", "async", "embassy"]
 categories = ["embedded", "no-std", "asynchronous", "game-engines"]
 
 [features]

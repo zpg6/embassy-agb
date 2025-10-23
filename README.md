@@ -1,5 +1,8 @@
 # Embassy AGB - Async Rust Support for Game Boy Advance Development
 
+[![Crates.io Version](https://img.shields.io/crates/v/embassy-agb)](https://crates.io/crates/embassy-agb)
+[![Crates.io Downloads](https://img.shields.io/crates/d/embassy-agb)](https://crates.io/crates/embassy-agb)
+
 This repository provides async/await support for Game Boy Advance development using the [embassy](https://embassy.dev) executor integrated with the [agb](https://agbrs.dev) library.
 
 ## Features
