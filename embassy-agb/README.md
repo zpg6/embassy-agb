@@ -27,7 +27,7 @@ embassy-agb = { git = "https://github.com/agbrs/embassy-agb" }
 Embassy-agb supports using any of the GBA's 4 hardware timers for the time driver. Choose exactly one:
 
 - `time-driver-timer0` - Timer0 (used by sound system)
-- `time-driver-timer1` - Timer1 (used by sound system)  
+- `time-driver-timer1` - Timer1 (used by sound system)
 - `time-driver-timer2` - Timer2 (default, available for general use)
 - `time-driver-timer3` - Timer3 (available for general use)
 
@@ -45,19 +45,19 @@ use embassy_executor::Spawner;
 #[embassy_agb::main]
 async fn main(spawner: Spawner) {
     let mut gba = embassy_agb::init(Default::default());
-    
+
     // Spawn background tasks
     spawner.spawn(display_task(gba.display())).unwrap();
     spawner.spawn(audio_task(gba.mixer())).unwrap();
-    
+
     // Main game loop
     let mut input = gba.input();
     loop {
         // Wait for input asynchronously
         let (button, event) = input.wait_for_any_button_press().await;
-        
+
         // Handle input...
-        
+
         // Run at 60 FPS
         Timer::after_millis(16).await;
     }
@@ -72,10 +72,10 @@ async fn display_task(mut display: embassy_agb::display::AsyncDisplay<'_>) {
     }
 }
 
-#[embassy_executor::task] 
+#[embassy_executor::task]
 async fn audio_task(mut mixer: embassy_agb::sound::AsyncMixer<'_>) {
     mixer.init(agb::sound::mixer::Frequency::Hz32768);
-    
+
     loop {
         // Process audio frame
         mixer.frame().await;
@@ -106,24 +106,3 @@ Embassy-agb is designed to be fully compatible with existing agb code:
 - Use `gba.agb()` to access the underlying `agb::Gba` instance
 - Mix async and sync code as needed
 - Existing agb examples can be gradually migrated to async
-
-## Examples
-
-See the `examples/` directory for complete examples demonstrating:
-
-- Basic async game loop
-- Multi-task game architecture
-- Async input handling
-- Async display operations
-- Async audio mixing
-- Integration with existing agb code
-
-## Requirements
-
-- Rust nightly (required by agb)
-- GBA development toolchain
-- Embassy ecosystem crates
-
-## License
-
-Licensed under the Mozilla Public License 2.0, same as agb.
