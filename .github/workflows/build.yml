@@ -18,10 +18,10 @@ jobs:
           components: rust-src, clippy, rustfmt
 
       - name: Build `embassy-agb`
-        run: cargo build --manifest-path embassy-agb/Cargo.toml -Zbuild-std=core,alloc
+        run: cargo build --manifest-path embassy-agb/Cargo.toml --target thumbv4t-none-eabi -Zbuild-std=core,alloc
 
       - name: Build `embassy-agb-macros`
         run: cargo build --manifest-path embassy-agb-macros/Cargo.toml
 
       - name: Build `examples`
-        run: cargo build --manifest-path examples/Cargo.toml -Zbuild-std=core,alloc
+        run: cargo build --manifest-path examples/Cargo.toml --target thumbv4t-none-eabi -Zbuild-std=core,alloc
