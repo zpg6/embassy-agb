@@ -12,7 +12,11 @@ categories = ["embedded", "no-std", "asynchronous", "game-engines"]
 default = ["executor", "time-driver-timer2"]
 
 ## Enable embassy executor integration
-executor = ["dep:embassy-executor", "embassy-executor/arch-spin", "embassy-executor/executor-thread"]
+executor = [
+    "dep:embassy-executor",
+    "embassy-executor/arch-spin",
+    "embassy-executor/executor-thread",
+]
 
 ## Enable embassy time integration
 time = ["dep:embassy-time"]
@@ -33,10 +37,16 @@ time-driver-timer3 = ["_time-driver"]
 testing = []
 
 # Internal features
-_time-driver = ["dep:embassy-time-driver", "time", "embassy-time-driver/tick-hz-32_768"]
+_time-driver = [
+    "dep:embassy-time-driver",
+    "time",
+    "embassy-time-driver/tick-hz-32_768",
+]
 
 [dependencies]
-agb = { git = "https://github.com/zpg6/agb", branch = "feat/async", features = ["embassy"] }
+agb = { git = "https://github.com/zpg6/agb", branch = "feat/async", features = [
+    "embassy",
+] }
 embassy-agb-macros = { version = "0.1.0", path = "../embassy-agb-macros" }
 
 # Embassy core
@@ -49,7 +59,10 @@ embassy-futures = { git = "https://github.com/embassy-rs/embassy" }
 
 # Utilities
 critical-section = "1.1"
-portable-atomic = { version = "1.6.0", default-features = false, features = ["unsafe-assume-single-core", "fallback"] }
+portable-atomic = { version = "1.6.0", default-features = false, features = [
+    "unsafe-assume-single-core",
+    "fallback",
+] }
 heapless = { version = "0.8", default-features = false }
 
 [build-dependencies]
