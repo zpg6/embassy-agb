@@ -1,0 +1,24 @@
+# Rust
+target/
+**/target/
+Cargo.lock
+*.pdb
+*.rlib
+*.rmeta
+
+# GBA
+*.gba
+*.elf
+*.sav
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
