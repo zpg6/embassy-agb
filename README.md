@@ -5,6 +5,8 @@
 
 This repository provides async/await support for Game Boy Advance development using the [embassy](https://embassy.dev) executor integrated with the [agb](https://agbrs.dev) library.
 
+![Example](./docs/animated_ship.gif)
+
 ## Features
 
 - **Async/await support**: Write GBA games using modern async Rust
