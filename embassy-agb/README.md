@@ -106,3 +106,11 @@ Embassy-agb is designed to be fully compatible with existing agb code:
 - Use `gba.agb()` to access the underlying `agb::Gba` instance
 - Mix async and sync code as needed
 - Existing agb examples can be gradually migrated to async
+
+## Resources
+
+- [agb documentation](https://docs.rs/agb/latest/agb/)
+- [agbrs book](https://agbrs.dev/book/)
+- [mGBA emulator](https://mgba.io)
+- ⭐️ [zpg6/agbrs-capture](https://github.com/zpg6/agbrs-capture) - For capturing GIFs of projects and examples
+- ⭐️ [zpg6/aseprite-preview](https://marketplace.visualstudio.com/items?itemName=grimaldi-tech.aseprite-preview) - VSCode / Cursor extension for quick previews of Aseprite pixel art files (.aseprite and .ase)
