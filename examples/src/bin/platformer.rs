@@ -4,7 +4,7 @@
 //!
 //! Controls:
 //! - LEFT/RIGHT: Move the goof character horizontally
-//! - A button: Jump (only when on ground/platform)
+//! - A button or UP: Jump (only when on ground/platform, no double jumping)
 //! - Collect all coins (they respawn when you get them all!)
 //! - Reach the goal platform to win!
 //!
@@ -40,8 +40,10 @@ include_aseprite!(mod coin_sprites, "gfx/coin.aseprite");
 struct ButtonState {
     left: bool,
     right: bool,
+    up: bool,
     a: bool,
     a_just_pressed: bool,
+    up_just_pressed: bool,
 }
 
 impl ButtonState {
@@ -53,28 +55,36 @@ impl ButtonState {
 static BUTTON_STATE: Mutex<CriticalSectionRawMutex, ButtonState> = Mutex::new(ButtonState {
     left: false,
     right: false,
+    up: false,
     a: false,
     a_just_pressed: false,
+    up_just_pressed: false,
 });
 
 #[embassy_executor::task]
 async fn input_task(mut input: AsyncInput) {
     let mut prev_a_pressed = false;
+    let mut prev_up_pressed = false;
 
     loop {
         let left_pressed = input.is_pressed(Button::LEFT);
         let right_pressed = input.is_pressed(Button::RIGHT);
+        let up_pressed = input.is_pressed(Button::UP);
         let a_pressed = input.is_pressed(Button::A);
 
         let a_just_pressed = a_pressed && !prev_a_pressed;
+        let up_just_pressed = up_pressed && !prev_up_pressed;
         prev_a_pressed = a_pressed;
+        prev_up_pressed = up_pressed;
 
         {
             let mut state = BUTTON_STATE.lock().await;
             state.left = left_pressed;
             state.right = right_pressed;
+            state.up = up_pressed;
             state.a = a_pressed;
             state.a_just_pressed = a_just_pressed;
+            state.up_just_pressed = up_just_pressed;
         }
 
         input.wait_for_any_button_press().await;
@@ -201,8 +211,9 @@ async fn main(spawner: Spawner) -> ! {
         if !game_won {
             let (move_left, move_right, _is_moving, jump) = {
                 let mut state = BUTTON_STATE.lock().await;
-                let jump = state.a_just_pressed;
+                let jump = state.a_just_pressed || state.up_just_pressed;
                 state.a_just_pressed = false;
+                state.up_just_pressed = false;
                 (state.left, state.right, state.is_moving(), jump)
             };
 
