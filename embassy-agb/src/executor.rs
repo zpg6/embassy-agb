@@ -1,9 +1,15 @@
+//! Embassy executor with automatic power management
+//!
+//! Uses `HALTCNT` (0x4000301) to enter Halt mode when idle, waking on interrupts.
+//! - Halt (bit 7=0): CPU pauses until interrupt, hardware continues
+//! - Stop (bit 7=1): Everything pauses (not used by executor)
+
 use core::marker::PhantomData;
 
 pub use embassy_executor::Spawner;
 use embassy_executor::raw;
 
-/// Embassy executor for GBA using spin-based polling
+/// Embassy executor with automatic Halt mode when idle
 pub struct Executor {
     inner: raw::Executor,
     not_send: PhantomData<*mut ()>,
@@ -24,10 +30,9 @@ impl Executor {
         }
     }
 
-    /// Run the executor with the given initialization function
+    /// Run the executor (never returns)
     ///
-    /// This function never returns and will run the async main loop.
-    /// The init closure receives a Spawner that can be used to spawn initial tasks.
+    /// Polls tasks continuously, entering Halt mode when idle to save power.
     pub fn run(&'static mut self, init: impl FnOnce(Spawner)) -> ! {
         // Initialize time driver if enabled
         #[cfg(feature = "_time-driver")]
@@ -42,8 +47,7 @@ impl Executor {
                 self.inner.poll();
             }
 
-            // Use agb's halt to save power when no tasks are ready
-            // This is more power efficient than busy-waiting
+            // Halt until interrupt when idle (power saving)
             agb::halt();
         }
     }

@@ -1,3 +1,19 @@
+//! Embassy time driver using GBA hardware timers
+//!
+//! Uses one of the four 16-bit GBA timers with Divider256 (65.536kHz) to provide
+//! embassy-time's 32.768kHz tick rate.
+//!
+//! ## Timer Registers (per timer n=0-3)
+//! - `TM{n}CNT_L` (0x4000100 + n*4): Counter/Reload
+//! - `TM{n}CNT_H` (0x4000102 + n*4): Control (prescaler, IRQ enable, start/stop)
+//!
+//! ## Interrupts
+//! - `IE` (0x4000200): Enable - bits 3-6 for Timer 0-3
+//! - `IF` (0x4000202): Request/Acknowledge
+//! - `IME` (0x4000208): Master Enable
+//!
+//! Default: Timer 2, 64-count overflow (~1ms ticks, ~1000 interrupts/sec)
+
 use core::cell::{Cell, RefCell};
 use core::sync::atomic::{Ordering, compiler_fence};
 use portable_atomic::AtomicU32;
@@ -11,7 +27,8 @@ use embassy_time_queue_utils::Queue;
 use agb::interrupt::{Interrupt, add_interrupt_handler};
 use agb::timer::{Divider, Timer};
 
-/// Compile-time timer selection based on feature flags
+/// Timer selection via feature flags (default: Timer 2)
+/// Note: Timer 0-1 often used by sound system
 const TIMER_NUMBER: u16 = if cfg!(feature = "time-driver-timer0") {
     0
 } else if cfg!(feature = "time-driver-timer1") {
@@ -69,13 +86,10 @@ const fn get_timer_interrupt() -> Interrupt {
     }
 }
 
-/// Default timer interrupt frequency - provides ~1ms granularity
+/// Default overflow: 64 counts = ~1ms at 65.536kHz
 const DEFAULT_TIMER_OVERFLOW_AMOUNT: u16 = 64;
 
-/// Calculate embassy timestamp from timer periods and current counter value
-///
-/// The GBA timer runs at 65.536kHz and overflows every timer_overflow_amount counts.
-/// Embassy expects 32.768kHz ticks, so we divide hardware ticks by 2.
+/// Convert timer hardware ticks (65.536kHz) to embassy ticks (32.768kHz)
 fn calc_now(
     period: u32,
     counter: u16,
@@ -124,7 +138,7 @@ impl AlarmState {
     }
 }
 
-/// GBA Time Driver using configurable timer for embassy-time support
+/// Embassy time driver using GBA hardware timer
 struct GbaTimeDriver {
     period: AtomicU32,
     initial_timer_value: AtomicU32,
@@ -148,13 +162,9 @@ impl GbaTimeDriver {
         self.init_timer();
     }
 
-    /// Configure timer interrupt frequency
+    /// Configure timer overflow (lower = better precision, more CPU overhead)
     ///
-    /// At 65.536kHz timer frequency:
-    /// - 4 counts = ~61μs interrupts, 2 embassy ticks per period (highest precision)
-    /// - 16 counts = ~244μs interrupts, 8 embassy ticks per period
-    /// - 64 counts = ~977μs interrupts, 32 embassy ticks per period (default)
-    /// - 256 counts = ~3.9ms interrupts, 128 embassy ticks per period
+    /// At 65.536kHz: 4=~61μs, 16=~244μs, 64=~1ms (default), 256=~4ms, 1024=~16ms
     pub fn set_timer_frequency(&self, overflow_amount: u16) {
         self.timer_overflow_amount
             .store(overflow_amount as u32, Ordering::Relaxed);
@@ -181,7 +191,7 @@ impl GbaTimeDriver {
                 .set_interrupt(true)
                 .set_enabled(true);
 
-            // Capture initial timer value for precise timing calculations
+            // Capture initial timer value
             let initial_value = timer.value();
             self.initial_timer_value
                 .store(initial_value as u32, Ordering::Relaxed);

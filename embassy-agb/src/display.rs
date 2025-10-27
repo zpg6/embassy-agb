@@ -1,3 +1,13 @@
+//! Async display operations with VBlank support
+//!
+//! VBlank occurs ~60 times/sec between scanlines 160-227, providing a safe window
+//! for graphics updates without tearing.
+//!
+//! ## Registers
+//! - `DISPSTAT` (0x4000004): bit 3 enables VBlank IRQ
+//! - `IE` (0x4000200): bit 0 for VBlank
+//! - `IF` (0x4000202): bit 0 to acknowledge
+
 use core::cell::Cell;
 use core::future::Future;
 use core::pin::Pin;
@@ -17,13 +27,12 @@ static VBLANK_WAKER: AtomicWaker = AtomicWaker::new();
 /// Whether the VBlank handler is initialized
 static VBLANK_INITIALIZED: AtomicBool = AtomicBool::new(false);
 
-/// Initialize VBlank handler
+/// Initialize VBlank interrupt handler
 fn init_embassy_vblank() {
     if VBLANK_INITIALIZED.swap(true, Ordering::SeqCst) {
         return; // Already initialized
     }
 
-    // Set up VBlank interrupt handler
     let handler = unsafe {
         add_interrupt_handler(Interrupt::VBlank, |_| {
             VBLANK_COUNTER.store(VBLANK_COUNTER.load(Ordering::SeqCst) + 1, Ordering::SeqCst);
@@ -50,7 +59,7 @@ impl<'a> AsyncDisplay<'a> {
         }
     }
 
-    /// Wait for the next VBlank interrupt asynchronously
+    /// Wait for the next VBlank (~16.7ms at 60Hz)
     pub async fn wait_for_vblank(&self) {
         EmbassyVBlankFuture::new().await
     }
@@ -73,7 +82,7 @@ impl<'a> AsyncDisplay<'a> {
     }
 }
 
-/// Future that completes on the next VBlank
+/// Future that completes on next VBlank
 struct EmbassyVBlankFuture {
     last_count: Cell<usize>,
 }

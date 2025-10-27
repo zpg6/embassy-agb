@@ -25,6 +25,7 @@
 //! - Async sound mixing
 //! - Embassy time integration with GBA timers
 //! - Task spawning and management
+//! - Automatic power management via Halt mode
 //!
 //! ## Example
 //!
