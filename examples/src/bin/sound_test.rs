@@ -17,10 +17,9 @@
 use agb::include_wav;
 use embassy_agb::{agb::sound::mixer::Frequency, Spawner};
 
-/// Load jump sound effect from agb examples
+/// Load jump sound effect
 /// The WAV file must be at 10512Hz to match the mixer frequency
-static JUMP_SOUND: agb::sound::mixer::SoundData =
-    include_wav!("../../agb/agb/examples/sfx/jump.wav");
+static JUMP_SOUND: agb::sound::mixer::SoundData = include_wav!("sfx/jump.wav");
 
 #[embassy_agb::main]
 async fn main(_spawner: Spawner) -> ! {
