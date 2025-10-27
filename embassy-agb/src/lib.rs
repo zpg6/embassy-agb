@@ -95,6 +95,8 @@ pub mod display;
 pub mod input;
 /// Async sound utilities
 pub mod sound;
+/// Utility functions and macros
+pub mod utils;
 
 /// Internal utilities (do not use directly)
 #[doc(hidden)]
