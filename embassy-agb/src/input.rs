@@ -397,6 +397,28 @@ impl AsyncInput {
     pub fn y_tri(&self) -> Tri {
         self.controller.y_tri()
     }
+
+    /// Get the current button state as raw bits
+    pub(crate) fn button_state_bits(&self) -> u16 {
+        let mut bits = 0u16;
+        for button in [
+            Button::A,
+            Button::B,
+            Button::START,
+            Button::SELECT,
+            Button::LEFT,
+            Button::RIGHT,
+            Button::UP,
+            Button::DOWN,
+            Button::L,
+            Button::R,
+        ] {
+            if self.controller.is_pressed(button) {
+                bits |= button.bits() as u16;
+            }
+        }
+        bits
+    }
 }
 
 /// Future that waits for a specific button press using agb's ButtonController
