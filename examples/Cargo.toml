@@ -9,7 +9,7 @@ embassy-agb = { path = "../embassy-agb", features = [
     "time",
     "time-driver-timer2",
 ] }
-agb = { git = "https://github.com/zpg6/agb", branch = "feat/async" }
+agb = { version = "0.22.6" }
 embassy-executor = { git = "https://github.com/embassy-rs/embassy", features = [
     "arch-spin",
     "executor-thread",

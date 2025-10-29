@@ -44,7 +44,7 @@ _time-driver = [
 ]
 
 [dependencies]
-agb = { git = "https://github.com/zpg6/agb", branch = "feat/async", features = [
+agb = { version = "0.22.6", features = [
     "embassy",
 ] }
 embassy-agb-macros = { version = "0.1.0", path = "../embassy-agb-macros" }
