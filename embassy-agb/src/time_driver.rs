@@ -174,8 +174,8 @@ impl GbaTimeDriver {
         critical_section::with(|cs| {
             let mut timer_ref = self.timer.borrow(cs).borrow_mut();
 
-            // Configure selected timer for embassy timing
-            let all_timers = unsafe { agb::timer::AllTimers::new() };
+            let gba = unsafe { crate::_internal::get_agb_instance() };
+            let all_timers = unsafe { gba.timers.all_timers() };
             let mut timer = match TIMER_NUMBER {
                 0 => all_timers.timer0,
                 1 => all_timers.timer1,
