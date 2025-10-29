@@ -154,7 +154,7 @@ async fn main(spawner: Spawner) -> ! {
     let input_config = InputConfig {
         poll_rate: PollingRate::Hz60,
     };
-    spawner.spawn(embassy_agb::input::input_polling_task(input_config).unwrap());
+    spawner.must_spawn(embassy_agb::input::input_polling_task(input_config));
 
     let input = gba.input_with_config(input_config);
     let mut display = gba.display();
@@ -183,7 +183,7 @@ async fn main(spawner: Spawner) -> ! {
     const FIRE_RATE: u32 = 4; // Fire every 4 frames when holding A (about 15 rockets per second at 60fps)
 
     // Spawn input task
-    spawner.spawn(input_task(input).unwrap());
+    spawner.must_spawn(input_task(input));
 
     loop {
         // Wait for VBlank: ensures smooth rendering without tearing

@@ -65,7 +65,7 @@ async fn main(spawner: Spawner) -> ! {
     embassy_agb::agb::println!("(Input polling enabled at 60Hz)");
 
     // Spawn the button input task
-    spawner.spawn(button_input_task(input).unwrap());
+    spawner.must_spawn(button_input_task(input));
 
     // Main loop: handle counter updates and print current value every 1 second
     let mut counter: u8 = 0;

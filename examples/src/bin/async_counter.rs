@@ -53,7 +53,7 @@ async fn main(spawner: Spawner) -> ! {
     embassy_agb::agb::println!("");
 
     // Spawn the fast counter task
-    spawner.spawn(fast_counter_task(start_time).unwrap());
+    spawner.must_spawn(fast_counter_task(start_time));
 
     // Main counter runs at a slower rate
     let mut main_counter = 0u32;

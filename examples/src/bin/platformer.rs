@@ -15,6 +15,7 @@
 //! - Collision detection
 //! - Win condition: reach the goal platform
 //! - Custom goof character sprite, grass platforms, and animated coins
+//! - Jump sound effect
 
 #![no_std]
 #![no_main]
@@ -24,72 +25,15 @@
 
 extern crate alloc;
 
-use agb::{display::object::Object, include_aseprite};
-use embassy_agb::{
-    agb::input::Button,
-    input::{AsyncInput, InputConfig, PollingRate},
-    sync::{blocking_mutex::raw::CriticalSectionRawMutex, mutex::Mutex},
-    Spawner,
-};
+use agb::{display::object::Object, include_aseprite, include_wav};
+use embassy_agb::{agb::input::Button, agb::sound::mixer::Frequency, Spawner};
 
 include_aseprite!(mod goof_sprites, "gfx/goof.aseprite");
 include_aseprite!(mod grass_sprites, "gfx/grass.aseprite");
 include_aseprite!(mod coin_sprites, "gfx/coin.aseprite");
 
-#[derive(Clone, Copy, Default)]
-struct ButtonState {
-    left: bool,
-    right: bool,
-    up: bool,
-    a: bool,
-    a_just_pressed: bool,
-    up_just_pressed: bool,
-}
-
-impl ButtonState {
-    fn is_moving(&self) -> bool {
-        self.left || self.right
-    }
-}
-
-static BUTTON_STATE: Mutex<CriticalSectionRawMutex, ButtonState> = Mutex::new(ButtonState {
-    left: false,
-    right: false,
-    up: false,
-    a: false,
-    a_just_pressed: false,
-    up_just_pressed: false,
-});
-
-#[embassy_executor::task]
-async fn input_task(mut input: AsyncInput) {
-    let mut prev_a_pressed = false;
-    let mut prev_up_pressed = false;
-
-    loop {
-        let left_pressed = input.is_pressed(Button::LEFT);
-        let right_pressed = input.is_pressed(Button::RIGHT);
-        let up_pressed = input.is_pressed(Button::UP);
-        let a_pressed = input.is_pressed(Button::A);
-
-        let a_just_pressed = a_pressed && !prev_a_pressed;
-        let up_just_pressed = up_pressed && !prev_up_pressed;
-        prev_a_pressed = a_pressed;
-        prev_up_pressed = up_pressed;
-
-        {
-            let mut state = BUTTON_STATE.lock().await;
-            state.left = left_pressed;
-            state.right = right_pressed;
-            state.up = up_pressed;
-            state.a = a_pressed;
-            state.a_just_pressed = a_just_pressed;
-            state.up_just_pressed = up_just_pressed;
-        }
-
-        input.wait_for_any_button_press().await;
-    }
-}
+/// Jump sound effect
+static JUMP_SOUND: agb::sound::mixer::SoundData = include_wav!("sfx/jump.wav");
 
 #[derive(Clone, Copy)]
 struct Platform {
@@ -151,16 +95,11 @@ impl Coin {
 }
 
 #[embassy_agb::main]
-async fn main(spawner: Spawner) -> ! {
+async fn main(_spawner: Spawner) -> ! {
     let mut gba = embassy_agb::init(Default::default());
 
-    let input_config = InputConfig {
-        poll_rate: PollingRate::Hz60,
-    };
-    spawner.spawn(embassy_agb::input::input_polling_task(input_config).unwrap());
-
-    let input = gba.input_with_config(input_config);
-    let mut display = gba.display();
+    // Use convenient peripherals API with automatic frame handling and sound mixing
+    let mut peripherals = gba.peripherals(Frequency::Hz10512);
 
     const SPRITE_SIZE: i32 = 8;
     const MOVE_SPEED: i32 = 2;
@@ -200,22 +139,16 @@ async fn main(spawner: Spawner) -> ! {
     let total_coins = coins.len();
     let mut collected_coins = 0;
 
-    let mut frame_count = 0u32;
     const IDLE_ANIMATION_RATE: u32 = 15;
 
-    spawner.spawn(input_task(input).unwrap());
-
     loop {
-        display.wait_for_vblank().await;
+        // Wait for frame and get events (button presses, frame counter, etc.)
+        let events = peripherals.wait_frame().await;
 
         if !game_won {
-            let (move_left, move_right, _is_moving, jump) = {
-                let mut state = BUTTON_STATE.lock().await;
-                let jump = state.a_just_pressed || state.up_just_pressed;
-                state.a_just_pressed = false;
-                state.up_just_pressed = false;
-                (state.left, state.right, state.is_moving(), jump)
-            };
+            // Check for continuous button states (movement)
+            let move_left = peripherals.input.is_pressed(Button::LEFT);
+            let move_right = peripherals.input.is_pressed(Button::RIGHT);
 
             if move_left {
                 goof_x -= MOVE_SPEED;
@@ -228,15 +161,14 @@ async fn main(spawner: Spawner) -> ! {
 
             goof_x = goof_x.clamp(0, agb::display::WIDTH - SPRITE_SIZE);
 
-            if jump && on_ground {
-                velocity_y = JUMP_STRENGTH;
-            }
-
+            // Apply gravity
             velocity_y += GRAVITY;
             velocity_y = velocity_y.min(MAX_FALL_SPEED);
 
             let next_y = goof_y + velocity_y;
 
+            // Check platform collisions before jump to determine ground state
+            let was_on_ground = on_ground;
             on_ground = false;
             for platform in &platforms {
                 if platform.is_on_top(goof_x, next_y, SPRITE_SIZE, SPRITE_SIZE, velocity_y) {
@@ -249,6 +181,21 @@ async fn main(spawner: Spawner) -> ! {
 
             if !on_ground {
                 goof_y = next_y;
+            }
+
+            // Handle jump AFTER determining ground state - only jump if we were on ground
+            // and button was just pressed this frame (events.is_pressed = edge detection)
+            if was_on_ground
+                && on_ground
+                && (events.is_pressed(Button::A) || events.is_pressed(Button::UP))
+            {
+                velocity_y = JUMP_STRENGTH;
+                on_ground = false; // Prevent jumping again until we land
+
+                // Create channel manually to ensure single playback
+                use agb::sound::mixer::SoundChannel;
+                let channel = SoundChannel::new(JUMP_SOUND);
+                let _ = peripherals.mixer.play_sound(channel);
             }
 
             if goof_y > agb::display::HEIGHT {
@@ -275,7 +222,7 @@ async fn main(spawner: Spawner) -> ! {
                 game_won = true;
             }
 
-            let animation_frame = (frame_count / IDLE_ANIMATION_RATE) as usize;
+            let animation_frame = (events.frame_count / IDLE_ANIMATION_RATE) as usize;
 
             let animation_tag = if facing_right {
                 &goof_sprites::RIGHT
@@ -286,7 +233,7 @@ async fn main(spawner: Spawner) -> ! {
             let mut goof = Object::new(animation_tag.animation_sprite(animation_frame));
             goof.set_pos((goof_x, goof_y));
 
-            let mut frame = display.frame().await;
+            let mut frame = peripherals.display.frame().await;
             goof.show(&mut frame);
 
             for platform in &platforms {
@@ -303,7 +250,7 @@ async fn main(spawner: Spawner) -> ! {
                 goal_obj.show(&mut frame);
             }
 
-            let coin_animation_frame = (frame_count / 8) as usize;
+            let coin_animation_frame = (events.frame_count / 8) as usize;
             for coin in &coins {
                 if !coin.collected {
                     let mut coin_obj =
@@ -315,7 +262,7 @@ async fn main(spawner: Spawner) -> ! {
 
             frame.commit();
         } else {
-            let animation_frame = (frame_count / 5) as usize;
+            let animation_frame = (events.frame_count / 5) as usize;
 
             let animation_tag = if facing_right {
                 &goof_sprites::RIGHT
@@ -326,7 +273,7 @@ async fn main(spawner: Spawner) -> ! {
             let mut goof = Object::new(animation_tag.animation_sprite(animation_frame));
             goof.set_pos((goof_x, goof_y));
 
-            let mut frame = display.frame().await;
+            let mut frame = peripherals.display.frame().await;
             goof.show(&mut frame);
 
             for platform in &platforms {
@@ -344,7 +291,7 @@ async fn main(spawner: Spawner) -> ! {
                 goal_obj.show(&mut frame);
             }
 
-            let coin_animation_frame = (frame_count / 8) as usize;
+            let coin_animation_frame = (events.frame_count / 8) as usize;
             for coin in &coins {
                 if !coin.collected {
                     let mut coin_obj =
@@ -356,7 +303,5 @@ async fn main(spawner: Spawner) -> ! {
 
             frame.commit();
         }
-
-        frame_count = frame_count.wrapping_add(1);
     }
 }

@@ -536,7 +536,5 @@ impl<'a> GbaPeripherals<'a> {
 #[cfg(all(feature = "time", feature = "executor"))]
 pub fn enable_input_polling(spawner: &Spawner, rate: input::PollingRate) {
     let config = input::InputConfig::from(rate);
-    if let Ok(token) = input::input_polling_task(config) {
-        spawner.spawn(token);
-    }
+    spawner.must_spawn(input::input_polling_task(config));
 }

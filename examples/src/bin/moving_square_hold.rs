@@ -114,7 +114,7 @@ async fn main(spawner: Spawner) -> ! {
     };
 
     // Spawn the input polling task
-    spawner.spawn(embassy_agb::input::input_polling_task(input_config).unwrap());
+    spawner.must_spawn(embassy_agb::input::input_polling_task(input_config));
 
     let input = gba.input_with_config(input_config);
     let mut display = gba.display();
@@ -154,7 +154,7 @@ async fn main(spawner: Spawner) -> ! {
     const MAX_Y: i32 = 160 - 8; // Screen height - sprite height
 
     // Spawn input task
-    spawner.spawn(input_task(input).unwrap());
+    spawner.must_spawn(input_task(input));
 
     loop {
         // Wait for VBlank: ensures smooth rendering without tearing

@@ -73,7 +73,7 @@ pub fn main(_args: TokenStream, input: TokenStream) -> TokenStream {
                 let mut executor = ::embassy_agb::Executor::new();
                 let executor = unsafe { __make_static(&mut executor) };
                 executor.run(|spawner| {
-                    spawner.spawn(main_task(spawner).unwrap());
+                    spawner.must_spawn(main_task(spawner));
                 });
             }
 
@@ -101,7 +101,7 @@ pub fn main(_args: TokenStream, input: TokenStream) -> TokenStream {
                 let mut executor = ::embassy_agb::Executor::new();
                 let executor = unsafe { __make_static(&mut executor) };
                 executor.run(|spawner| {
-                    spawner.spawn(main_task(spawner).unwrap());
+                    spawner.must_spawn(main_task(spawner));
                 });
             }
 
