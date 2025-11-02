@@ -15,21 +15,40 @@ This repository provides async/await support for Game Boy Advance development us
 - **Async APIs**: Async wrappers for display, input, and sound operations
 - **Full agb compatibility**: Works alongside existing agb code
 
+## Requirements
+
+- Rust nightly toolchain (for `build-std`)
+- `thumbv4t-none-eabi` target: `rustup target add thumbv4t-none-eabi`
+- [mGBA](https://mgba.io) or another GBA emulator for testing
+
 ## Quick Start
 
-Add to your `Cargo.toml`:
+Add the dependencies:
+
+```bash
+cargo add agb@0.22.6
+cargo add embassy-agb
+cargo add embassy-executor@0.9
+```
+
+Or manually add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-agb = { git = "https://github.com/zpg6/agb", branch = "feat/async" }
-embassy-agb = { git = "https://github.com/agbrs/embassy-agb" }
-# Or to use a specific timer (Timer2 is default):
-# embassy-agb = { git = "https://github.com/agbrs/embassy-agb", default-features = false, features = ["executor", "time-driver-timer0"] }
+agb = "0.22.6"
+embassy-agb = "0.1"
+embassy-executor = "0.9"
 ```
 
 ### Timer Selection
 
-Embassy-agb supports using any of the GBA's 4 hardware timers for the time driver. Choose exactly one:
+Embassy-agb supports using any of the GBA's 4 hardware timers for the time driver. Timer2 is the default. To use a different timer:
+
+```bash
+cargo add embassy-agb --no-default-features --features executor,time-driver-timer0
+```
+
+Available timer options:
 
 - `time-driver-timer0` - Timer0 (used by sound system)
 - `time-driver-timer1` - Timer1 (used by sound system)
@@ -38,22 +57,41 @@ Embassy-agb supports using any of the GBA's 4 hardware timers for the time drive
 
 **Note**: Timer0 and Timer1 are also used by agb's sound system. Using Timer2 or Timer3 avoids potential conflicts.
 
+### Project Setup
+
+Create a `rust-toolchain.toml` in your project root:
+
+```toml
+[toolchain]
+channel = "nightly"
+components = ["rust-src", "clippy"]
+```
+
+Optionally, create `.cargo/config.toml` to set the default target:
+
+```toml
+[build]
+target = "thumbv4t-none-eabi"
+
+[unstable]
+build-std = ["core", "alloc"]
+```
+
 Create an async GBA application:
 
 ```rust
 #![no_std]
 #![no_main]
 
-use embassy_agb::time::Timer;
-use embassy_executor::Spawner;
+use embassy_agb::{time::Timer, Spawner};
 
 #[embassy_agb::main]
 async fn main(spawner: Spawner) {
     let mut gba = embassy_agb::init(Default::default());
 
     // Spawn background tasks
-    spawner.spawn(display_task(gba.display())).unwrap();
-    spawner.spawn(audio_task(gba.mixer())).unwrap();
+    spawner.must_spawn(display_task(gba.display()));
+    spawner.must_spawn(audio_task(gba.mixer()));
 
     // Main game loop
     let mut input = gba.input();
@@ -116,6 +154,7 @@ Embassy-agb is designed to be fully compatible with existing agb code:
 
 - [agb documentation](https://docs.rs/agb/latest/agb/)
 - [agbrs book](https://agbrs.dev/book/)
+- [embassy documentation](https://embassy.dev)
 - [mGBA emulator](https://mgba.io)
 - ⭐️ [zpg6/agbrs-capture](https://github.com/zpg6/agbrs-capture) - For capturing GIFs of projects and examples
 - ⭐️ [zpg6/aseprite-preview](https://marketplace.visualstudio.com/items?itemName=grimaldi-tech.aseprite-preview) - VSCode / Cursor extension for quick previews of Aseprite pixel art files (.aseprite and .ase)

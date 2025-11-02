@@ -15,7 +15,7 @@ use core::task::{Context, Poll};
 use portable_atomic::{AtomicBool, AtomicUsize, Ordering};
 
 use agb::display::GraphicsDist;
-use agb::interrupt::{Interrupt, VBlank, add_interrupt_handler};
+use agb::interrupt::{add_interrupt_handler, Interrupt, VBlank};
 use embassy_sync::waitqueue::AtomicWaker;
 
 /// VBlank counter

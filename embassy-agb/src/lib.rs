@@ -10,7 +10,6 @@
     any(test, feature = "testing"),
     reexport_test_harness_main = "test_main"
 )]
-#![doc = include_str!("../README.md")]
 #![warn(missing_docs)]
 
 //! # Embassy async support for agb

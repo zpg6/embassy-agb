@@ -6,8 +6,8 @@
 
 use core::marker::PhantomData;
 
-pub use embassy_executor::Spawner;
 use embassy_executor::raw;
+pub use embassy_executor::Spawner;
 
 /// Embassy executor with automatic Halt mode when idle
 pub struct Executor {

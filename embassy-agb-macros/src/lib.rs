@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{ItemFn, ReturnType, Type, parse_macro_input};
+use syn::{parse_macro_input, ItemFn, ReturnType, Type};
 
 /// Main entry point for embassy-agb async applications
 ///

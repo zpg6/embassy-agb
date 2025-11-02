@@ -1,10 +1,13 @@
 [package]
 name = "embassy-agb-macros"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+authors = ["Zach Grimaldi <zpg6@pitt.edu>"]
 description = "Macros for embassy-agb async Game Boy Advance development"
 license = "MIT"
 repository = "https://github.com/zpg6/embassy-agb"
+homepage = "https://github.com/zpg6/embassy-agb"
+documentation = "https://docs.rs/embassy-agb-macros"
 keywords = ["embedded", "gba", "gameboy", "async", "macros"]
 categories = ["embedded", "no-std"]
 

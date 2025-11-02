@@ -15,16 +15,16 @@
 //! Default: Timer 2, 64-count overflow (~1ms ticks, ~1000 interrupts/sec)
 
 use core::cell::{Cell, RefCell};
-use core::sync::atomic::{Ordering, compiler_fence};
+use core::sync::atomic::{compiler_fence, Ordering};
 use portable_atomic::AtomicU32;
 
 use critical_section::CriticalSection;
-use embassy_sync::blocking_mutex::Mutex;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
+use embassy_sync::blocking_mutex::Mutex;
 use embassy_time_driver::Driver;
 use embassy_time_queue_utils::Queue;
 
-use agb::interrupt::{Interrupt, add_interrupt_handler};
+use agb::interrupt::{add_interrupt_handler, Interrupt};
 use agb::timer::{Divider, Timer};
 
 /// Timer selection via feature flags (default: Timer 2)
