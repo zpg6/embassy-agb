@@ -158,3 +158,11 @@ Embassy-agb is designed to be fully compatible with existing agb code:
 - [mGBA emulator](https://mgba.io)
 - ⭐️ [zpg6/agbrs-capture](https://github.com/zpg6/agbrs-capture) - For capturing GIFs of projects and examples
 - ⭐️ [zpg6/aseprite-preview](https://marketplace.visualstudio.com/items?itemName=grimaldi-tech.aseprite-preview) - VSCode / Cursor extension for quick previews of Aseprite pixel art files (.aseprite and .ase)
+
+## License
+
+[MIT](./LICENSE)
+
+## Contributing
+
+Contributions are welcome! Whether it's bug fixes, feature additions, or documentation improvements, we appreciate your help in making this project better. For major changes or new features, please open an issue first to discuss what you would like to change.
